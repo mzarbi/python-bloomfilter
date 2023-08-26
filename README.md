@@ -36,19 +36,59 @@ assert (1.0 - (len(sbf) / float(count))) <= sbf.error_rate + 2e-18
 ```
 ### Universal Bloom Filter
 ```python
-from pybloom_live import UniversalBloomFilter
-ubf = UniversalBloomFilter()
+# Initialize BloomFilter with expected number of records as 10000
+bloom = UniversalBloomFilter(expected_num_records=10000)
 
-# Inserting and checking various data types:
-ubf.insert(42)
-assert 42 in ubf
-ubf.insert(3.14159)
-assert 3.14159 in ubf
-ubf.insert("Hello, World!")
-assert "Hello, World!" in ubf
+# Inserting a single integer
+bloom.insert(42)
+assert 42 in bloom
 
-from datetime import datetime
+# Inserting a single float
+bloom.insert(3.14159)
+assert 3.14159 in bloom
+
+# Inserting multiple integers
+bloom.insert([1, 2, 3, 4, 5])
+assert all(i in bloom for i in [1, 2, 3, 4, 5])
+
+# Inserting multiple floats
+bloom.insert([0.1, 0.2, 0.3])
+assert all(f in bloom for f in [0.1, 0.2, 0.3])
+
+# Inserting a range of integers
+bloom.insert((10, 20))
+assert all(i in bloom for i in range(10, 21))
+
+# Inserting datetime objects
+from datetime import datetime, timedelta
 now = datetime.now()
-ubf.insert(now)
-assert now in ubf
+bloom.insert(now)
+assert now in bloom
+
+# Inserting a range of datetime objects
+start_date = datetime(2022, 1, 1)
+end_date = datetime(2022, 1, 5)
+bloom.insert((start_date, end_date))
+assert all((start_date + timedelta(days=i)) in bloom for i in range(5))
+
+# Inserting strings
+bloom.insert("Hello, World!")
+assert "Hello, World!" in bloom
+
+# Inserting a range of strings (Note: Ranges aren't really meaningful for strings, but this is how it'd work)
+bloom.insert(("a", "d"))
+assert all(char in bloom for char in ["a", "b", "c", "d"])
+
+# Inserting other types by converting to string
+custom_obj = {"name": "Alice", "age": 30}
+bloom.insert(custom_obj)
+assert custom_obj in bloom
+
+# Using the save and load functionality
+bloom.save("bloom_filter.pkl")
+loaded_bloom = UniversalBloomFilter.load("bloom_filter.pkl")
+assert 42 in loaded_bloom
+
+# Print BloomFilter representation
+    print(bloom)
 ```
